@@ -1,0 +1,28 @@
+{
+    "name": "dpb/dpb-model-permission-guard",
+    "type": "library",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Dpb\\ModelPermissionGuard\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Lubos Babocky",
+            "email": "babocky.lubos@dpb.sk"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^8.2",
+        "dpb/dpb-utils": "dev-staging"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Dpb\\ModelPermissionGuard\\Providers\\ModelPermissionGuardServiceProvider"
+            ]
+        }
+    }
+}
