@@ -1,6 +1,6 @@
 <?php
 
-namespace Dpb\ModelPermissionGuard\Support;
+namespace Dpb\MasterPermissionGuard\Support;
 
 final class Registry
 {

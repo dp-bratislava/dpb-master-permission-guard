@@ -1,6 +1,6 @@
 <?php
 
-namespace Dpb\ModelPermissionGuard\Concerns;
+namespace Dpb\MasterPermissionGuard\Concerns;
 
 trait HasPermissionGuard
 {

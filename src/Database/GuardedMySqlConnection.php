@@ -1,6 +1,6 @@
 <?php
 
-namespace Dpb\ModelPermissionGuard\Database;
+namespace Dpb\MasterPermissionGuard\Database;
 
 use Illuminate\Database\MySqlConnection;
 

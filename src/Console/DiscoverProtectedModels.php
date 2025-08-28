@@ -1,6 +1,6 @@
 <?php
 
-namespace Dpb\ModelPermissionGuard\Console;
+namespace Dpb\MasterPermissionGuard\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
@@ -8,8 +8,8 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
 use ReflectionClass;
-use Dpb\ModelPermissionGuard\Concerns\HasPermissionGuard;
-use Dpb\ModelPermissionGuard\Support\Registry;
+use Dpb\MasterPermissionGuard\Concerns\HasPermissionGuard;
+use Dpb\MasterPermissionGuard\Support\Registry;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;

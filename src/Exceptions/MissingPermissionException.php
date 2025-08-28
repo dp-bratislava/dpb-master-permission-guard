@@ -1,6 +1,6 @@
 <?php
 
-namespace Dpb\ModelPermissionGuard\Exceptions;
+namespace Dpb\MasterPermissionGuard\Exceptions;
 
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
@@ -13,7 +13,7 @@ class MissingPermissionException extends \RuntimeException
         private readonly string $table
     ) {
         parent::__construct(
-            __('dpb-model-permission-guard::exceptions.not_allowed', [
+            __('dpb-mpg::exceptions.not_allowed', [
                 'operation' => $operation,
                 'table' => $table
             ])

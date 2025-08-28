@@ -1,14 +1,14 @@
 <?php
 
-namespace Dpb\ModelPermissionGuard\Providers;
+namespace Dpb\MasterPermissionGuard\Providers;
 
-use Dpb\ModelPermissionGuard\Console\DiscoverProtectedModels;
-use Dpb\ModelPermissionGuard\Database\GuardedMySqlConnection;
-use Dpb\ModelPermissionGuard\Support\Registry;
+use Dpb\MasterPermissionGuard\Console\DiscoverProtectedModels;
+use Dpb\MasterPermissionGuard\Database\GuardedMySqlConnection;
+use Dpb\MasterPermissionGuard\Support\Registry;
 use Illuminate\Database\Connectors\MySqlConnector;
 use Illuminate\Support\ServiceProvider;
 
-class ModelPermissionGuardServiceProvider extends ServiceProvider
+class MasterPermissionGuardServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
@@ -19,7 +19,8 @@ class ModelPermissionGuardServiceProvider extends ServiceProvider
     {
         $this->initializeCache();
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
-        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'dpb-model-permission-guard');
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'dpb-mpg');
+        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'dpb-mpg');
         $this->registerConsoleCommands();
     }
 

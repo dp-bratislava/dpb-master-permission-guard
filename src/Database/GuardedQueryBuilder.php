@@ -1,10 +1,10 @@
 <?php
 
-namespace Dpb\ModelPermissionGuard\Database;
+namespace Dpb\MasterPermissionGuard\Database;
 
 use App\Models\User;
-use Dpb\ModelPermissionGuard\Exceptions\MissingPermissionException;
-use Dpb\ModelPermissionGuard\Services\PermissionGuardService;
+use Dpb\MasterPermissionGuard\Exceptions\MissingPermissionException;
+use Dpb\MasterPermissionGuard\Services\PermissionGuardService;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
 

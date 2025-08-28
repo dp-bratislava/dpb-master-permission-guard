@@ -1,8 +1,8 @@
 <?php
 
-namespace Dpb\ModelPermissionGuard\Services;
+namespace Dpb\MasterPermissionGuard\Services;
 
-use Dpb\ModelPermissionGuard\Support\Registry;
+use Dpb\MasterPermissionGuard\Support\Registry;
 
 class PermissionGuardService
 {
