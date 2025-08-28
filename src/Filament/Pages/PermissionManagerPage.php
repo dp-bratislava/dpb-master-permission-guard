@@ -3,7 +3,6 @@
 namespace Dpb\MasterPermissionGuard\Filament\Pages;
 
 use App\Models\User;
-use Dpb\WorkTimeFund\Models\WorkTime;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Grid;
@@ -14,7 +13,6 @@ use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Spatie\Permission\Models\Permission;
 
@@ -23,87 +21,110 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
     use InteractsWithForms;
     use InteractsWithActions;
 
+    public array $filters = [
+        'type' => 'mpg',
+        'guard' => 'web',
+        'package' => 'dpb-mpg',
+        'table' => ''
+    ];
+
     protected static string $view = 'dpb-mpg::filament.pages.permission-manager-page';
 
     #[Computed()]
     public function permissions(): array
     {
-        $mpgPermissions = Permission::whereLike('name', 'dpb-mpg.%')
-            ->get()
-            ->toArray();
-        $grouppedPermissions = [];
-        foreach ($mpgPermissions as $permission) {
-            list($mpgPrefix, $tableName, $operation) = explode('.', $permission['name'], 3);
-            $grouppedPermissions[$permission['guard_name']][$tableName][$operation] = $permission;
-        }
-
-
-
-        dd($grouppedPermissions);
-
-
-        $grouppedPermissions = [];
-        foreach ($allPermissions as $permission) {
-            list($package, $permissionName) = explode('.', $permission['name'], 2);
-            if ($package === 'dpb-mpg') {
-                list($tableName, $operation) = explode('.', $permissionName, 2);
-                $grouppedPermissions[$permission['guard_name']][$package][$tableName][$operation] = $permission;
+        $permissionsQuery = Permission::query();
+        if ($this->filters['type'] === 'mpg') {
+            if (empty($this->filters['table'])) {
+                $permissionsQuery->whereLike('name', 'dpb-mpg.%');
             } else {
-                $grouppedPermissions[$permission['guard_name']][$package][$permissionName] = $permission;
+                $permissionsQuery->whereLike('name', 'dpb-mpg.'.$this->filters['table'].'.%');
+            }
+        } else {
+            if (empty($this->filters['package'])) {
+                $permissionsQuery->whereNotLike('name', 'dpb-mpg.%');
+            } else {
+                $permissionsQuery->where('name', 'like', $this->filters['package'].'.%');
             }
         }
-        return $grouppedPermissions;
+
+        if (!empty($this->filters['guard'])) {
+            $permissionsQuery->where('guard_name', $this->filters['guard']);
+        }
+
+        return $permissionsQuery->orderBy('id')->get()->toArray();
     }
 
     public function form(
         Form $form
     ): Form {
-        $permissions = $this->permissions();
-        $guards = (new Collection(array_keys($permissions)))
-            ->mapWithKeys(fn ($guard) => [$guard => $guard])
-            ->toArray();
         return $form
+            ->statePath('filters')
             ->schema([
                 Grid::make(6)
                     ->schema([
+                        Select::make('type')
+                            ->options([
+                                'mpg' => 'Práva pre modely',
+                                'other' => 'Iné práva'
+                            ])
+                            ->label(__('dpb-mpg::translations.filament_page.form.fields.type'))
+                            ->inlineLabel()
+                            ->live()
+                            ->selectablePlaceholder(false),
                         Select::make('guard')
-                            ->options($guards)
+                            ->options($this->getAvailableGuards())
                             ->label(__('dpb-mpg::translations.filament_page.form.fields.guards'))
                             ->inlineLabel()
                             ->live()
-                            ->default(array_key_first($guards) ?? null)
                             ->selectablePlaceholder(false),
                         Select::make('package')
-                            ->options(
-                                fn (callable $get) => !empty($get('guard'))
-                                    ? (new Collection(array_keys($permissions[$get('guard')])))
-                                        ->mapWithKeys(fn ($package) => [$package => $package])
-                                        ->toArray()
-                                    : []
-                            )
+                            ->options(fn () => $this->getAvailablePackages())
                             ->live()
-                            ->afterStateUpdated(fn ($state) => dd($state))
+                            ->label(__('dpb-mpg::translations.filament_page.form.fields.package'))
                             ->inlineLabel()
-                            ->default('dpb-mpg')
+                            ->visible(fn ($get) => $get('type') !== 'mpg')
                             ->selectablePlaceholder(false),
                         Select::make('table')
-                            ->options(
-                                fn (callable $get) => !empty($get('guard')) && !empty($get('package'))
-                                    ? (new Collection(array_keys($permissions[$get('guard')][$get('package')])))
-                                        ->mapWithKeys(fn ($table) => [$table => $table])
-                                        ->toArray()
-                                    : []
-                            )
+                            ->options($this->getAvailableTables())
+                            ->label(__('dpb-mpg::translations.filament_page.form.fields.table'))
                             ->inlineLabel()
-                            ->afterStateUpdated(fn ($state) => dd($state))
-                            ->visible(true)
-                            ->selectablePlaceholder(false),
+                            ->live()
+                            ->placeholder(__('dpb-mpg::translations.filament_page.form.labels.all'))
+                            ->visible(fn ($get) => $get('type') === 'mpg'),
                     ])
-            ])
-            ->fill([
-                'guard' => 'web',
-                'package' => 'dpb-mpg'
             ]);
+    }
+
+    private function getAvailableGuards(): array
+    {
+        return Permission::query()
+            ->distinct()
+            ->pluck('guard_name')
+            ->mapWithKeys(fn ($guard) => [$guard => $guard])
+            ->toArray();
+    }
+
+    private function getAvailablePackages(): array
+    {
+        return Permission::query()
+            ->pluck('name')
+            ->map(fn ($name) => explode('.', $name)[0])
+            ->unique()
+            ->filter(fn ($packageName) => $packageName !== 'dpb-mpg')
+            ->mapWithKeys(fn ($package) => [$package => $package])
+            ->toArray();
+    }
+
+    private function getAvailableTables(): array
+    {
+        return Permission::query()
+            ->pluck('name')
+            ->filter(fn ($name) => str_starts_with($name, 'dpb-mpg.'))
+            ->map(fn ($name) => explode('.', $name)[1])
+            ->unique()
+            ->mapWithKeys(fn ($table) => [$table => $table])
+            ->toArray();
     }
 
     public static function getSlug(): string

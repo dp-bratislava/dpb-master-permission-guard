@@ -1,14 +1,58 @@
 <x-filament::page>
-    {{ $this->form }}
+    <x-filament::section>
+        {{ $this->form }}
+    </x-filament::section>
     
     <x-filament::card>
+        <div class="overflow-x-auto">
+            <div class="rounded-xl border border-gray-200 shadow-sm">
+                <table class="w-full table-auto text-sm">
+                    <thead class="align-bottom">
+                        <tr class="border-b border-gray-200">
+                            <th class="px-4 py-3 text-left font-medium uppercase tracking-wider text-xs">ID</th>
+                            <th class="px-4 py-3 text-left font-medium uppercase tracking-wider text-xs">Guard</th>
+                            <th class="px-4 py-3 text-left font-medium uppercase tracking-wider text-xs">Permission</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @foreach ($this->permissions as $permission)
+                            <tr class="align-middle">
+                                <td class="px-4 py-3 whitespace-nowrap">{{ $permission['id'] }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap">{{ $permission['guard_name'] }}</td>
+                                <td class="px-4 py-3">{{ $permission['name'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+
+
+{{--
         <table>
             <thead>
                 <tr>
-                    <th>{{ __('dpb-mpg::translations.filament_page.table.headers.guard') }}</th>
-                    <th>{{ __('dpb-mpg::translations.filament_page.table.headers.package') }}</th>
-                    <th>{{ __('dpb-mpg::translations.filament_page.table.headers.table') }}</th>
-                    <th>{{ __('dpb-mpg::translations.filament_page.table.headers.permission') }}</th>
+                    <th>
+                        ID
+                    </th>
+                    @if ($fiters['type'] === 'mpg')
+                        <th>
+                            {{ __('dpb-mpg::translations.filament_page.table.headers.table') }}
+                        </th>
+                    @else
+                        
+                    @endif
+                    <th>
+                        {{ __('dpb-mpg::translations.filament_page.table.headers.guard') }}
+                    </th>
+                    <th>
+                        {{ __('dpb-mpg::translations.filament_page.table.headers.package') }}
+                    </th>
+                    <th>
+                        {{ __('dpb-mpg::translations.filament_page.table.headers.permission') }}
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -39,5 +83,6 @@
                 @endforeach
             </tbody>
         </table>
+--}}
     </x-filament::card>
 </x-filament::page>

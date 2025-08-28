@@ -23,7 +23,7 @@ final class GuardedMySqlConnection extends MySqlConnection
         $bindings = [],
         $useReadPdo = true
     ) {
-        $this->guardSql($query);
+        $this->guardSql($query, $bindings);
         return parent::select($query, $bindings, $useReadPdo);
     }
 
@@ -32,31 +32,31 @@ final class GuardedMySqlConnection extends MySqlConnection
         $bindings = [],
         $sequence = null
     ): bool {
-        $this->guardSql($query);
+        $this->guardSql($query, $bindings);
         return parent::insert($query, $bindings);
     }
 
     public function update($query, $bindings = [])
     {
-        $this->guardSql($query);
+        $this->guardSql($query, $bindings);
         return parent::update($query, $bindings);
     }
 
     public function delete($query, $bindings = [])
     {
-        $this->guardSql($query);
+        $this->guardSql($query, $bindings);
         return parent::delete($query, $bindings);
     }
 
     public function affectingStatement($query, $bindings = [])
     {
-        $this->guardSql($query);
+        $this->guardSql($query, $bindings);
         return parent::affectingStatement($query, $bindings);
     }
 
     public function statement($query, $bindings = [])
     {
-        $this->guardSql($query);
+        $this->guardSql($query, $bindings);
         return parent::statement($query, $bindings);
     }
 
@@ -67,7 +67,8 @@ final class GuardedMySqlConnection extends MySqlConnection
     }
 
     protected function guardSql(
-        string $sql
+        string $sql,
+        array $bindings = []
     ): void {
         if (strpos($sql, 'EXPLAIN') === 0) {
             return;
@@ -75,7 +76,7 @@ final class GuardedMySqlConnection extends MySqlConnection
         if (!Str::contains($sql, array_keys(PermissionGuardService::getGuardedTables()))) {
             return;
         }
-        foreach (SqlInspector::getAffectedTables($sql) as $table => $operation) {
+        foreach (SqlInspector::getAffectedTables($sql, $bindings) as $table => $operation) {
             PermissionGuardService::authorize($table, $operation);
         }
 

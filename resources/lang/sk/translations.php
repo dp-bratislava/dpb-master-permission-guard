@@ -8,8 +8,14 @@ return [
         'description' => 'Spravujte všetky povolenia',
         'form' => [
             'fields' => [
+                'type' => 'Typ',
                 'guards' => 'Guard',
+                'table' => 'Tabuľka',
+                'package' => 'Balíček'
             ],
+            'labels' => [
+                'all' => 'Všetky'
+            ]
         ],
         'table' => [
             'headers' => [
