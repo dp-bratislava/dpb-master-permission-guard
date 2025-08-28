@@ -10,64 +10,37 @@ use Illuminate\Support\Facades\Auth;
 
 final class GuardedQueryBuilder extends Builder
 {
-    private function guardOperation(
-        string $operation
-    ): void {
-        if (!$this->can($operation)) {
-            throw new MissingPermissionException(
-                operation: $operation,
-                table: $this->from
-            );
-        }
-    }
-
-    private function can(
-        string $operation
-    ): bool {
-        $guarded = PermissionGuardService::getGuardedTables();
-
-        if (!isset($guarded[$this->from])
-            || !in_array($operation, $guarded[$this->from]['permissions'], true)
-        ) {
-            return true;
-        }
-
-        /** @var User|null $user */
-        $user = Auth::user();
-        return $user?->can("dpb-mpg.{$this->from}.{$operation}") === true;
-    }
-
     public function get(
         $columns = ['*']
     ) {
-        $this->guardOperation('read');
+        PermissionGuardService::authorize($this->from, 'read');
         return parent::get($columns);
     }
 
     public function first(
         $columns = ['*']
     ) {
-        $this->guardOperation('read');
+        PermissionGuardService::authorize($this->from, 'read');
         return parent::first($columns);
     }
 
     public function count(
         $columns = '*'
     ) {
-        $this->guardOperation('read');
+        PermissionGuardService::authorize($this->from, 'read');
         return parent::count($columns);
     }
 
     public function exists()
     {
-        $this->guardOperation('read');
+        PermissionGuardService::authorize($this->from, 'read');
         return parent::exists();
     }
 
     public function insert(
         array $values
     ) {
-        $this->guardOperation('create');
+        PermissionGuardService::authorize($this->from, 'create');
         return parent::insert($values);
     }
 
@@ -76,27 +49,27 @@ final class GuardedQueryBuilder extends Builder
         array|string $uniqueBy,
         ?array $update = null
     ): int {
-        $this->can('update') || $this->can('create');
+        PermissionGuardService::authorizeOneOf($this->from, ['update', 'create']);
         return parent::upsert($values, $uniqueBy, $update);
     }
 
     public function update(
         array $values
     ) {
-        $this->guardOperation('update');
+        PermissionGuardService::authorize($this->from, 'update');
         return parent::update($values);
     }
 
     public function delete(
         $id = null
     ) {
-        $this->guardOperation('delete');
+        PermissionGuardService::authorize($this->from, 'delete');
         return parent::delete($id);
     }
 
     public function truncate()
     {
-        $this->guardOperation('delete');
+        PermissionGuardService::authorize($this->from, 'delete');
         return parent::truncate();
     }
 }

@@ -173,7 +173,7 @@ final class DiscoverProtectedModels extends Command
         string $base = 'packages'
     ): array {
         $roots = [];
-        $our = 'dpb/dpb-model-permission-guard';
+        $our = 'dpb/dpb-master-permission-guard';
 
         foreach (array_merge(
             glob(base_path("$base/*/*"), GLOB_ONLYDIR) ?: [],
