@@ -20,10 +20,28 @@ return [
         'table' => [
             'headers' => [
                 'guard' => 'Guard',
-                'package' => 'Balík',
                 'table' => 'Tabuľka',
+                'action' => 'Akcia',
                 'permission' => 'Povolenie',
+                'roles' => 'Roly'
             ],
         ],
+        'actions' => [
+            'manage_assigned_roles' => [
+                'label' => 'Priradené roly [:count]',
+                'modal_heading' => 'Správa priradených rolí',
+                'roles_form_field' => 'Roly',
+                'notifications' => [
+                    'success' => 'Roly boli úspešne priradené k povoleniu.',
+                ]
+            ]
+        ]
     ],
+    'permission_actions' => [
+        'create' => 'Vytvoriť',
+        'read' => 'Čítať',
+        'update' => 'Aktualizovať',
+        'delete' => 'Odstrániť',
+        'restore' => 'Obnoviť',
+    ]
 ];

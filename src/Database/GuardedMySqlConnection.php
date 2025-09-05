@@ -70,12 +70,15 @@ final class GuardedMySqlConnection extends MySqlConnection
         string $sql,
         array $bindings = []
     ): void {
+
         if (strpos($sql, 'EXPLAIN') === 0) {
             return;
         }
+
         if (!Str::contains($sql, array_keys(PermissionGuardService::getGuardedTables()))) {
             return;
         }
+
         foreach (SqlInspector::getAffectedTables($sql, $bindings) as $table => $operation) {
             PermissionGuardService::authorize($table, $operation);
         }

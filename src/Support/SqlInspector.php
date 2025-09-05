@@ -34,6 +34,8 @@ class SqlInspector
         return (new Collection(DB::select('EXPLAIN ' . $sql, $bindings)))
             ->mapWithKeys(fn ($item) => [$item->table => match($item->select_type) {
                 'SIMPLE' => 'read',
+                'PRIMARY' => 'read',
+                'DERIVED' => 'read',
                 'INSERT' => 'create',
                 'REPLACE' => 'create',
                 'UPDATE' => 'update',

@@ -3,6 +3,8 @@
 namespace Dpb\MasterPermissionGuard\Filament\Pages;
 
 use App\Models\User;
+use Dpb\MasterPermissionGuard\Services\PermissionGuardService;
+use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Grid;
@@ -10,11 +12,12 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class PermissionManagerPage extends Page implements HasForms, HasActions
 {
@@ -24,35 +27,86 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
     public array $filters = [
         'type' => 'mpg',
         'guard' => 'web',
-        'package' => 'dpb-mpg',
+        'package' => '',
         'table' => ''
     ];
 
     protected static string $view = 'dpb-mpg::filament.pages.permission-manager-page';
 
+    public function mount(): void
+    {
+        PermissionGuardService::findRoles();
+    }
+
     #[Computed()]
     public function permissions(): array
     {
-        $permissionsQuery = Permission::query();
-        if ($this->filters['type'] === 'mpg') {
-            if (empty($this->filters['table'])) {
-                $permissionsQuery->whereLike('name', 'dpb-mpg.%');
-            } else {
-                $permissionsQuery->whereLike('name', 'dpb-mpg.'.$this->filters['table'].'.%');
-            }
-        } else {
-            if (empty($this->filters['package'])) {
-                $permissionsQuery->whereNotLike('name', 'dpb-mpg.%');
-            } else {
-                $permissionsQuery->where('name', 'like', $this->filters['package'].'.%');
-            }
-        }
+        return PermissionGuardService::findPermissions(
+            package: ($this->filters['type'] === 'mpg') ? 'dpb-mpg' : ($this->filters['package'] ?: ''),
+            guard: $this->filters['guard'] ?: 'web',
+            table: $this->filters['table'] ?: null,
+            withRoles: true
+        );
+    }
 
-        if (!empty($this->filters['guard'])) {
-            $permissionsQuery->where('guard_name', $this->filters['guard']);
-        }
+    public function manageAssignedRolesAction(): Action
+    {
+        return Action::make('manageAssignedRolesAction')
+            ->label(fn (array $arguments) => count($this->getPermissionRoles($arguments['id'])))
+            ->tooltip(fn ($arguments) => __(
+                'dpb-mpg::translations.filament_page.actions.manage_assigned_roles.label',
+                ['count' => count($arguments['roles'])]
+            ))
+            ->modalHeading(__('dpb-mpg::translations.filament_page.actions.manage_assigned_roles.modal_heading'))
+            ->form([
+                Select::make('roles')
+                    ->label(__('dpb-mpg::translations.filament_page.actions.manage_assigned_roles.roles_form_field'))
+                    ->multiple()
+                    ->options(fn () => Role::query()
+                        ->pluck('name', 'id')
+                        ->toArray())
+                    ->preload(),
+            ])
+            ->fillForm(
+                fn (array $arguments) => [
+                    'roles' => Permission::with('roles')
+                        ->find($arguments['id'])
+                        ?->roles
+                        ->pluck('id')
+                        ->toArray()
+                ]
+            )
+            ->action(
+                function (
+                    array $data,
+                    array $arguments
+                ) {
+                    Permission::find($arguments['id'])
+                        ?->syncRoles(
+                            ...Role::whereIn('id', $data['roles'])
+                                ->get()
+                                ->pluck('name')
+                                ->toArray()
+                        );
+                    Notification::make()
+                        ->title(__('dpb-mpg::translations.filament_page.actions.manage_assigned_roles.notifications.success'))
+                        ->success()
+                        ->send();
+                }
+            )
+            ->color('primary')
+            ->icon('heroicon-o-pencil');
+    }
 
-        return $permissionsQuery->orderBy('id')->get()->toArray();
+    private function getPermissionRoles(
+        int $permissionId
+    ): array {
+        return Role::whereHas('permissions', function ($q) use ($permissionId) {
+            $q->where('id', $permissionId);
+        })
+        ->with('permissions')
+        ->get()
+        ->toArray();
     }
 
     public function form(
@@ -71,22 +125,33 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
                             ->label(__('dpb-mpg::translations.filament_page.form.fields.type'))
                             ->inlineLabel()
                             ->live()
+                            ->afterStateUpdated(function ($state) {
+                                switch ($state) {
+                                    case 'mpg':
+                                        $this->filters['package'] = '';
+                                        break;
+                                    case 'other':
+                                        $this->filters['table'] = '';
+                                        break;
+                                }
+                            })
                             ->selectablePlaceholder(false),
                         Select::make('guard')
-                            ->options($this->getAvailableGuards())
+                            ->options(fn () => PermissionGuardService::findAvailableGuards())
                             ->label(__('dpb-mpg::translations.filament_page.form.fields.guards'))
                             ->inlineLabel()
                             ->live()
                             ->selectablePlaceholder(false),
                         Select::make('package')
-                            ->options(fn () => $this->getAvailablePackages())
+                            ->options(fn () => PermissionGuardService::findAvailablePackages())
                             ->live()
                             ->label(__('dpb-mpg::translations.filament_page.form.fields.package'))
                             ->inlineLabel()
-                            ->visible(fn ($get) => $get('type') !== 'mpg')
-                            ->selectablePlaceholder(false),
+                            ->default('')
+                            ->placeholder('Všetky balíčky')
+                            ->visible(fn ($get) => $get('type') !== 'mpg'),
                         Select::make('table')
-                            ->options($this->getAvailableTables())
+                            ->options(fn () => PermissionGuardService::findAvailableTables())
                             ->label(__('dpb-mpg::translations.filament_page.form.fields.table'))
                             ->inlineLabel()
                             ->live()
@@ -94,37 +159,6 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
                             ->visible(fn ($get) => $get('type') === 'mpg'),
                     ])
             ]);
-    }
-
-    private function getAvailableGuards(): array
-    {
-        return Permission::query()
-            ->distinct()
-            ->pluck('guard_name')
-            ->mapWithKeys(fn ($guard) => [$guard => $guard])
-            ->toArray();
-    }
-
-    private function getAvailablePackages(): array
-    {
-        return Permission::query()
-            ->pluck('name')
-            ->map(fn ($name) => explode('.', $name)[0])
-            ->unique()
-            ->filter(fn ($packageName) => $packageName !== 'dpb-mpg')
-            ->mapWithKeys(fn ($package) => [$package => $package])
-            ->toArray();
-    }
-
-    private function getAvailableTables(): array
-    {
-        return Permission::query()
-            ->pluck('name')
-            ->filter(fn ($name) => str_starts_with($name, 'dpb-mpg.'))
-            ->map(fn ($name) => explode('.', $name)[1])
-            ->unique()
-            ->mapWithKeys(fn ($table) => [$table => $table])
-            ->toArray();
     }
 
     public static function getSlug(): string
