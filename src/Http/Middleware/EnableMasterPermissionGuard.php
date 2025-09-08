@@ -3,7 +3,6 @@
 namespace Dpb\MasterPermissionGuard\Http\Middleware;
 
 use Dpb\MasterPermissionGuard\Database\GuardedMySqlConnection;
-use Illuminate\Database\Connectors\MySqlConnector;
 use Illuminate\Database\DatabaseManager;
 
 class EnableMasterPermissionGuard
@@ -20,7 +19,8 @@ class EnableMasterPermissionGuard
         config(['dpb-mpg.enabled' => true]);
 
         $this->db->extend('mysql', function (array $config, string $name) {
-            $pdo = (new MySqlConnector())->connect($config);
+            $connector = app('db.connector.mysql');
+            $pdo = $connector->connect($config);
             return new GuardedMySqlConnection(
                 $pdo,
                 $config['database'],
@@ -28,7 +28,9 @@ class EnableMasterPermissionGuard
                 $config
             );
         });
-        $this->db->purge(config('database.default'));
+        //$this->db->purge(config('database.default'));
+        $this->db->connection(config('database.default'))
+            ->reconnect();
 
         return $next($request);
     }
