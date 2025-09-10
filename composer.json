@@ -1,5 +1,5 @@
 {
-    "name": "dpb/dpb-model-permission-guard",
+    "name": "dpb/dpb-master-permission-guard",
     "type": "library",
     "license": "proprietary",
     "autoload": {
