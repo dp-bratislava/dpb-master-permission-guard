@@ -21,7 +21,7 @@ final class DiscoverProtectedModels extends Command
     private const DEFAULT_GUARDS = ['web'];
     private const DEFAULT_PERMISSIONS = ['create', 'read', 'update', 'delete'];
 
-    protected $signature = 'mpg:discover
+    protected $signature = 'dpb:mpg:discover
         {--paths=* : Paths to scan (PSR-4 roots).}
         {--packages=* : Vendor packages vendor/name (limits scan).}
         {--dry : Print results only; no writes, no permissions}';
