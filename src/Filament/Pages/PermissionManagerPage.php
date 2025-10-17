@@ -2,7 +2,6 @@
 
 namespace Dpb\MasterPermissionGuard\Filament\Pages;
 
-use App\Models\User;
 use Dpb\MasterPermissionGuard\Services\PermissionGuardService;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -14,6 +13,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Spatie\Permission\Models\Permission;
@@ -176,18 +176,10 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
         return '';
     }
 
-    public static function shouldRegisterNavigation(): bool
-    {
-        return self::getAuthUser()?->hasRole('super-admin') ?? false;
-    }
-
     public static function canAccess(): bool
     {
-        return self::getAuthUser()?->hasRole('super-admin') ?? false;
-    }
-
-    protected static function getAuthUser(): ?User
-    {
-        return Auth::user();
+        /** @var User|null $user */
+        $user = Auth::user();
+        return $user?->hasRole('super-admin') ?? false;
     }
 }

@@ -3,6 +3,7 @@
 namespace Dpb\MasterPermissionGuard\Providers;
 
 use Dpb\MasterPermissionGuard\Console\DiscoverProtectedModels;
+use Dpb\MasterPermissionGuard\Filament\Plugins\DpbMpgPlugin;
 use Dpb\MasterPermissionGuard\Http\Middleware\EnableMasterPermissionGuard;
 use Dpb\MasterPermissionGuard\Support\Registry;
 use Illuminate\Routing\Router;
@@ -25,6 +26,7 @@ class MasterPermissionGuardServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'dpb-mpg');
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'dpb-mpg');
         $this->registerConsoleCommands();
+        $this->registerFilamentPlugin();
     }
 
     private function registerConsoleCommands(): void
@@ -37,5 +39,13 @@ class MasterPermissionGuardServiceProvider extends ServiceProvider
     private function initializeCache(): void
     {
         Registry::seed(cache()->get('mpg:tables', []));
+    }
+
+    private function registerFilamentPlugin(): void
+    {
+        config()->set('admin-panel.plugins', array_merge(
+            [DpbMpgPlugin::class],
+            config('admin-panel.plugins', [])
+        ));
     }
 }
