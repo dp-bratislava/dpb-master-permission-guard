@@ -5,6 +5,7 @@ Guard **database table operations** in Laravel by mapping them to **Spatie permi
 - discovers Eloquent models that opt‑in via a trait and caches a **table ⇒ model FQCN** map
 - extends the **MySQL connection** so common query builder methods are **authorized** before hitting the DB
 - provides a Filament page to **inspect/manage** permissions (WIP)
+- provides traits for **Pages and Components** to automatically generate permissions based on FQCN and control access
 
 > Target stack: **Laravel 12**, **PHP ≥ 8.2**, **Livewire 3+**, **Filament 3+**, **spatie/laravel-permission 6.x**.
 
@@ -45,11 +46,11 @@ The service provider is auto‑discovered via `extra.laravel.providers`.
 Add the trait to any model you want to guard:
 
 ```php
-use Dpb\MasterPermissionGuard\Concerns\HasPermissionGuard;
+use Dpb\MasterPermissionGuard\Concerns\HasTableGuard;
 
 class User extends Model
 {
-    use HasPermissionGuard;
+    use HasTableGuard;
 }
 ```
 
@@ -62,7 +63,7 @@ php artisan mpg:discover
 By default the command:
 - scans PSR‑4 roots for models using the trait
 - writes the mapping to cache key `mpg:tables`
-- derives CRUD permission keys per protected table
+- derives CRUD permission keys per protected table via `HasTableGuard::getTablePermissions()`
 - optionally seeds Spatie permissions (guards: `web` by default)
 
 You can scope the scan:
@@ -75,6 +76,76 @@ php artisan mpg:discover \
 ```
 
 > On boot, `Registry::seed()` loads `cache('mpg:tables')`. Re‑run discovery after you add/change protected models or deploy to a fresh environment.
+
+---
+
+## HasTableGuard: CRUD Permissions
+New method available in `HasTableGuard`:
+
+```php
+public static function getTablePermissions(
+    bool $readOnly = false,
+    bool $withRestore = false
+): array {
+    $tablePermissions = [];
+    $tableName = (new static())->getTable();
+    $prefix = 'dpb-mpg';
+
+    if ($readOnly) {
+        return ["{$prefix}.{$tableName}.read"];
+    }
+
+    $tablePermissions[] = "{$prefix}.{$tableName}.create";
+    $tablePermissions[] = "{$prefix}.{$tableName}.read";
+    $tablePermissions[] = "{$prefix}.{$tableName}.update";
+    $tablePermissions[] = "{$prefix}.{$tableName}.delete";
+
+    if ($withRestore) {
+        $tablePermissions[] = "{$prefix}.{$tableName}.restore";
+    }
+
+    return $tablePermissions;
+}
+```
+
+This method allows automatic generation of CRUD permissions for each guarded table.
+
+---
+
+## HasPageGuard & HasComponentGuard
+These traits allow **automatic permission generation** for Filament Pages and Livewire Components.
+
+### HasPageGuard
+- Generates a permission key like `dpb-mpg-package.access.page-name` from the FQCN.
+- Use it in Page classes to integrate with RBAC and menu registration.
+
+```php
+use Dpb\MasterPermissionGuard\Concerns\HasPageGuard;
+
+class ExamplePage extends Page
+{
+    use HasPageGuard;
+}
+```
+
+- Provides static `getAccessPermission()` to generate the key.
+- Works with your RBAC system for menu visibility and route access.
+
+### HasComponentGuard
+- Automatically **skips rendering** of a Livewire Component if the user lacks permission.
+- Example:
+
+```php
+use Dpb\MasterPermissionGuard\Concerns\HasComponentGuard;
+
+class ExampleComponent extends Component
+{
+    use HasComponentGuard;
+}
+```
+
+- Internally calls `skipRender()` in the trait boot method.
+- Permission is generated dynamically via `getAccessPermission()` from the FQCN.
 
 ---
 
@@ -91,21 +162,11 @@ The provider **extends the MySQL driver** so `connection()->query()` returns a c
 If unauthorized, a `MissingPermissionException` is thrown.
 
 ```php
-// Internals (conceptual)
 PermissionGuardService::authorize($table, 'read');
-// builds key dpb-mpg.{table}.read and checks current user via Spatie
 ```
 
 ### Raw SQL
-A helper (`SqlInspector`) uses `EXPLAIN <sql>` to infer the target table(s) and map to CRUD. There are known gaps for statements where EXPLAIN does not apply or is ambiguous.
-
-**TODOs / Known limitations**
-- DDL and non‑EXPLAINable statements: `TRUNCATE`, `CREATE|ALTER|DROP`, `RENAME`, `LOAD DATA`, `LOCK/UNLOCK`, `CALL`, `SET|SHOW|DO`, `OPTIMIZE|ANALYZE|REPAIR`
-- `INSERT ... VALUES` shows *No tables used* in EXPLAIN → the target table must be parsed
-- multi‑table `DELETE t1,t2 ... JOIN ...` and `UPDATE ... JOIN ...`
-- ensure all internal EXPLAINs pass bindings and are clearly tagged
-
-Until these are finished, prefer the **query builder** API over arbitrary `DB::statement()` when you need enforcement.
+Helper (`SqlInspector`) uses `EXPLAIN <sql>` to infer target tables. Known limitations remain for statements where EXPLAIN is ambiguous.
 
 ---
 
@@ -130,38 +191,12 @@ $role->givePermissionTo('dpb-mpg.users.read');
 ---
 
 ## Filament integration (WIP)
-A simple plugin and page are included:
-
-- `Dpb\MasterPermissionGuard\Filament\Plugins\DpbMpgPlugin`
-- `Dpb\MasterPermissionGuard\Filament\Pages\PermissionManagerPage`
-
-Register the plugin in your panel provider:
-
-```php
-use Dpb\MasterPermissionGuard\Filament\Plugins\DpbMpgPlugin;
-
-public function panel(Panel $panel): Panel
-{
-    return $panel
-        // ...
-        ->plugins([
-            new DpbMpgPlugin(),
-        ]);
-}
-```
-
-The page lists permissions with basic filters. Labels live in `resources/lang/sk/translations.php`.
+A simple plugin and page are included. Page and component traits integrate directly with this RBAC system for automatic access control.
 
 ---
 
 ## Exceptions and UX
-`MissingPermissionException` returns HTTP 403. If the request expects JSON, the response is a small payload:
-
-```json
-{"error":"forbidden","op":"read","table":"users"}
-```
-
-A Filament notification is also triggered. Error handling is intentionally minimal for now.
+`MissingPermissionException` returns HTTP 403. Filament notifications are triggered when access is denied.
 
 ---
 
@@ -180,8 +215,8 @@ php artisan mpg:discover
 
 ## Limitations
 - Only **MySQL** is guarded.
-- **Raw SQL coverage** is partial (see TODOs). Prefer the query builder.
-- Package assumes a standard Spatie setup and a logged‑in user via the default guard (configurable in the command).
+- **Raw SQL coverage** is partial. Prefer the query builder.
+- Assumes standard Spatie setup and logged-in user via default guard.
 
 ---
 
@@ -199,6 +234,7 @@ php artisan mpg:discover
 - Per‑table options (custom operations, guards)
 - Driver‑agnostic guard (PostgreSQL, SQL Server)
 - Better Filament UI for bulk permission assignment
+- Fully automated Page & Component permission registration via traits
 
 ---
 

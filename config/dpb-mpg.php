@@ -1,5 +1,12 @@
 <?php
 
 return [
-    'enabled' => false
+    'enabled' => false,
+    'rbac' => [
+        'web' => [
+            // 'role_name' => [
+            //     'permission_name',
+            // ],
+        ],
+    ],
 ];

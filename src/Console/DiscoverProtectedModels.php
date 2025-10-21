@@ -8,7 +8,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
 use ReflectionClass;
-use Dpb\MasterPermissionGuard\Concerns\HasPermissionGuard;
+use Dpb\MasterPermissionGuard\Concerns\HasTableGuard;
 use Dpb\MasterPermissionGuard\Support\Registry;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Models\Permission;
@@ -16,7 +16,7 @@ use Spatie\Permission\PermissionRegistrar;
 
 final class DiscoverProtectedModels extends Command
 {
-    private const TRAIT = HasPermissionGuard::class;
+    private const TRAIT = HasTableGuard::class;
     private const CACHE_KEY = 'mpg:tables';
     private const DEFAULT_GUARDS = ['web'];
     private const DEFAULT_PERMISSIONS = ['create', 'read', 'update', 'delete'];

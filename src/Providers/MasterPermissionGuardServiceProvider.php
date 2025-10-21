@@ -3,6 +3,7 @@
 namespace Dpb\MasterPermissionGuard\Providers;
 
 use Dpb\MasterPermissionGuard\Console\DiscoverProtectedModels;
+use Dpb\MasterPermissionGuard\Console\RbacSyncCommand;
 use Dpb\MasterPermissionGuard\Filament\Plugins\DpbMpgPlugin;
 use Dpb\MasterPermissionGuard\Http\Middleware\EnableMasterPermissionGuard;
 use Dpb\MasterPermissionGuard\Support\Registry;
@@ -18,6 +19,10 @@ class MasterPermissionGuardServiceProvider extends ServiceProvider
 
     public function boot(Router $router): void
     {
+        $this->publishes([
+            __DIR__.'/../../config/dpb-mpg.php' => config_path('dpb-mpg.php'),
+        ], 'dpb-mpg-config');
+
         $router->prependMiddlewareToGroup('web', EnableMasterPermissionGuard::class);
         if (!$this->app->runningInConsole()) {
             $this->initializeCache();
@@ -33,6 +38,7 @@ class MasterPermissionGuardServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([DiscoverProtectedModels::class]);
+            $this->commands([RbacSyncCommand::class]);
         }
     }
 

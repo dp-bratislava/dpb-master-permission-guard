@@ -8,9 +8,9 @@ use Dpb\MasterPermissionGuard\Services\PermissionGuardService;
  * Trait for models that require permission guarding.
  * @mixin \Illuminate\Database\Eloquent\Model
  */
-trait HasPermissionGuard
+trait HasTableGuard
 {
-    protected static function bootHasPermissionGuard(): void
+    protected static function bootHasTableGuard(): void
     {
     }
 
