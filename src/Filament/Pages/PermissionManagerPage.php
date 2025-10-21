@@ -25,10 +25,8 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
     use InteractsWithActions;
 
     public array $filters = [
-        'type' => 'mpg',
+        'type' => 'tables',
         'guard' => 'web',
-        'package' => '',
-        'table' => ''
     ];
 
     protected static string $view = 'dpb-mpg::filament.pages.permission-manager-page';
@@ -41,12 +39,13 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
     #[Computed()]
     public function permissions(): array
     {
-        return PermissionGuardService::findPermissions(
-            package: ($this->filters['type'] === 'mpg') ? 'dpb-mpg' : ($this->filters['package'] ?: ''),
-            guard: $this->filters['guard'] ?: 'web',
-            table: $this->filters['table'] ?: null,
-            withRoles: true
-        );
+        return match($this->filters['type']) {
+            'tables' => PermissionGuardService::findTablePermissions()->toArray(),
+            'pages' => PermissionGuardService::findPagePermissions()->toArray(),
+            'components' => PermissionGuardService::findComponentPermissions()->toArray(),
+            'other' => PermissionGuardService::findOtherPermissions()->toArray(),
+            default => []
+        };
     }
 
     public function manageAssignedRolesAction(): Action
@@ -119,7 +118,9 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
                     ->schema([
                         Select::make('type')
                             ->options([
-                                'mpg' => 'Práva pre modely',
+                                'tables' => 'Modely',
+                                'pages' => 'Stránky',
+                                'components' => 'Komponenty',
                                 'other' => 'Iné práva'
                             ])
                             ->label(__('dpb-mpg::translations.filament_page.form.fields.type'))
@@ -127,36 +128,15 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
                             ->live()
                             ->afterStateUpdated(function ($state) {
                                 switch ($state) {
-                                    case 'mpg':
+                                    case 'tables':
                                         $this->filters['package'] = '';
                                         break;
-                                    case 'other':
+                                    default:
                                         $this->filters['table'] = '';
                                         break;
                                 }
                             })
                             ->selectablePlaceholder(false),
-                        Select::make('guard')
-                            ->options(fn () => PermissionGuardService::findAvailableGuards())
-                            ->label(__('dpb-mpg::translations.filament_page.form.fields.guards'))
-                            ->inlineLabel()
-                            ->live()
-                            ->selectablePlaceholder(false),
-                        Select::make('package')
-                            ->options(fn () => PermissionGuardService::findAvailablePackages())
-                            ->live()
-                            ->label(__('dpb-mpg::translations.filament_page.form.fields.package'))
-                            ->inlineLabel()
-                            ->default('')
-                            ->placeholder('Všetky balíčky')
-                            ->visible(fn ($get) => $get('type') !== 'mpg'),
-                        Select::make('table')
-                            ->options(fn () => PermissionGuardService::findAvailableTables())
-                            ->label(__('dpb-mpg::translations.filament_page.form.fields.table'))
-                            ->inlineLabel()
-                            ->live()
-                            ->placeholder(__('dpb-mpg::translations.filament_page.form.labels.all'))
-                            ->visible(fn ($get) => $get('type') === 'mpg'),
                     ])
             ]);
     }

@@ -5,6 +5,7 @@ namespace Dpb\MasterPermissionGuard\Services;
 use App\Models\User;
 use Dpb\MasterPermissionGuard\Exceptions\MissingPermissionException;
 use Dpb\MasterPermissionGuard\Support\Registry;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -104,6 +105,36 @@ class PermissionGuardService
             ->filter(fn ($packageName) => $packageName !== 'dpb-mpg')
             ->mapWithKeys(fn ($package) => [$package => $package])
             ->toArray();
+    }
+
+    public static function findTablePermissions(): Collection
+    {
+        return DB::table('permissions')
+            ->where('name', 'like', 'dpb-mpg.%')
+            ->get();
+    }
+
+    public static function findPagePermissions(): Collection
+    {
+        return DB::table('permissions')
+            ->where('name', 'like', '%.page-access.%')
+            ->get();
+    }
+
+    public static function findComponentPermissions(): Collection
+    {
+        return DB::table('permissions')
+            ->where('name', 'like', '%.component-access.%')
+            ->get();
+    }
+
+    public static function findOtherPermissions(): Collection
+    {
+        return DB::table('permissions')
+            ->whereNot('name', 'like', 'dpb-mpg.%')
+            ->whereNot('name', 'like', '%.page-access.%')
+            ->whereNot('name', 'like', '%.component-access.%')
+            ->get();
     }
 
     public static function findPermissions(
