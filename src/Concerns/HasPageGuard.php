@@ -19,7 +19,7 @@ trait HasPageGuard
             $fqcnParts[1] = str_replace($fqcnParts[0], '', $fqcnParts[1]);
         }
         return sprintf(
-            '%s-%s.access.%s',
+            '%s-%s.page-access.%s',
             Str::kebab($fqcnParts[0]),
             Str::kebab($fqcnParts[1]),
             Str::kebab(end($fqcnParts))
