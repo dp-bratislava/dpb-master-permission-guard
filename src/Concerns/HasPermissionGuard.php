@@ -14,6 +14,28 @@ trait HasPermissionGuard
     {
     }
 
+    public static function getTablePermissions(
+        bool $readOnly = false,
+        bool $withRestore = false
+    ): array {
+        $tablePermissions = [];
+        $tableName = (new static())->getTable();
+        $prefix = 'dpb-mpg';
+        if ($readOnly) {
+            return [
+                "{$prefix}.{$tableName}.read"
+            ];
+        }
+        $tablePermissions[] = "{$prefix}.{$tableName}.create";
+        $tablePermissions[] = "{$prefix}.{$tableName}.read";
+        $tablePermissions[] = "{$prefix}.{$tableName}.update";
+        $tablePermissions[] = "{$prefix}.{$tableName}.delete";
+        if ($withRestore) {
+            $tablePermissions[] = "{$prefix}.{$tableName}.restore";
+        }
+        return $tablePermissions;
+    }
+
     public static function canRead(): bool
     {
         return PermissionGuardService::can((new static())->getTable(), 'read');
