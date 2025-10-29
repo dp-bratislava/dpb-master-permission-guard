@@ -15,23 +15,27 @@ class EnableMasterPermissionGuard
     public function handle(
         $request,
         \Closure $next
-    ) {
-        config(['dpb-mpg.enabled' => true]);
+    ): mixed {
+        try {
+            config(key: ['dpb-mpg.enabled' => true]);
 
-        $this->db->extend('mysql', function (array $config, string $name) {
-            $connector = app('db.connector.mysql');
-            $pdo = $connector->connect($config);
-            return new GuardedMySqlConnection(
-                $pdo,
-                $config['database'],
-                $config['prefix'] ?? '',
-                $config
-            );
-        });
-        //$this->db->purge(config('database.default'));
-        $this->db->connection(config('database.default'))
-            ->reconnect();
-
+            $this->db->extend(name: 'mysql', resolver: function (array $config, string $name): GuardedMySqlConnection {
+                $connector = app(abstract: 'db.connector.mysql');
+                $pdo = $connector->connect(config: $config);
+                return new GuardedMySqlConnection(
+                    pdo: $pdo,
+                    database: $config['database'],
+                    tablePrefix: $config['prefix'] ?? '',
+                    config: $config
+                );
+            });
+            //$this->db->purge(config('database.default'));
+            $this->db->connection(name: config(key: 'database.default'))
+                ->reconnect();
+        } catch (\Throwable $e) {
+            report(exception: $e);
+            return response()->json(data: ['error' => 'Failed to enable master permission guard.'], status: 500);
+        }
         return $next($request);
     }
 }
