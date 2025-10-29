@@ -4,7 +4,7 @@
     "license": "proprietary",
     "autoload": {
         "psr-4": {
-            "Dpb\\ModelPermissionGuard\\": "src/"
+            "Dpb\\MasterPermissionGuard\\": "src/"
         }
     },
     "authors": [
@@ -16,12 +16,13 @@
     "minimum-stability": "dev",
     "require": {
         "php": "^8.2",
-        "dpb/dpb-utils": "dev-staging"
+        "dpb/dpb-utils": "dev-staging",
+        "spatie/laravel-permission": "^6.21"
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Dpb\\ModelPermissionGuard\\Providers\\ModelPermissionGuardServiceProvider"
+                "Dpb\\MasterPermissionGuard\\Providers\\MasterPermissionGuardServiceProvider"
             ]
         }
     }
