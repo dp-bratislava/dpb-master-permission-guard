@@ -38,21 +38,30 @@ trait HasTableGuard
 
     public static function canRead(): bool
     {
-        return PermissionGuardService::can((new static())->getTable(), 'read');
+        return self::can(ability: 'read');
     }
 
     public static function canCreate(): bool
     {
-        return PermissionGuardService::can((new static())->getTable(), 'create');
+        return self::can(ability: 'create');
     }
 
     public static function canUpdate(): bool
     {
-        return PermissionGuardService::can((new static())->getTable(), 'update');
+        return self::can(ability: 'update');
     }
 
     public static function canDelete(): bool
     {
-        return PermissionGuardService::can((new static())->getTable(), 'delete');
+        return self::can(ability: 'delete');
+    }
+
+    public static function can(
+        string $ability
+    ): bool {
+        return PermissionGuardService::can(
+            table: (new static())->getTable(),
+            operation: $ability
+        );
     }
 }
