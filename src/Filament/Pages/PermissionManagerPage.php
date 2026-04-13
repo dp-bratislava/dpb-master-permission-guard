@@ -6,12 +6,13 @@ use Dpb\MasterPermissionGuard\Services\PermissionGuardService;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Components\Grid;
+use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Notifications\Notification;
+use Filament\Panel;
 use Filament\Pages\Page;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +30,7 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
         'guard' => 'web',
     ];
 
-    protected static string $view = 'dpb-mpg::filament.pages.permission-manager-page';
+    protected string $view = 'dpb-mpg::filament.pages.permission-manager-page';
 
     public function mount(): void
     {
@@ -108,10 +109,8 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
         ->toArray();
     }
 
-    public function form(
-        Form $form
-    ): Form {
-        return $form
+    public function form(Schema $schema): Schema {
+        return $schema
             ->statePath('filters')
             ->schema([
                 Grid::make(6)
@@ -141,7 +140,7 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
             ]);
     }
 
-    public static function getSlug(): string
+    public static function getSlug(?Panel $panel = null): string
     {
         return 'dpb-mpg';
     }
