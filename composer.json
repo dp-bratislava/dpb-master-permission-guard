@@ -1,6 +1,5 @@
 {
     "name": "dpb/dpb-master-permission-guard",
-    "version": "dev-main",
     "type": "library",
     "license": "proprietary",
     "autoload": {
