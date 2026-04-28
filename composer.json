@@ -17,7 +17,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": "^8.2",
-        "dpb/dpb-utils": "^12.0",
+        "dpb/dpb-utils": "^12.5.0",
         "spatie/laravel-permission": "^6.21"
     },
     "extra": {
