@@ -6,24 +6,24 @@ use Dpb\MasterPermissionGuard\Services\PermissionGuardService;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Schemas\Schema;
 use Filament\Notifications\Notification;
-use Filament\Panel;
 use Filament\Pages\Page;
+use Filament\Panel;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Schema;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class PermissionManagerPage extends Page implements HasForms, HasActions
+class PermissionManagerPage extends Page implements HasActions, HasForms
 {
-    use InteractsWithForms;
     use InteractsWithActions;
+    use InteractsWithForms;
 
     public array $filters = [
         'type' => 'tables',
@@ -40,7 +40,7 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
     #[Computed()]
     public function permissions(): array
     {
-        return match($this->filters['type']) {
+        return match ($this->filters['type']) {
             'tables' => PermissionGuardService::findTablePermissions()->toArray(),
             'pages' => PermissionGuardService::findPagePermissions()->toArray(),
             'components' => PermissionGuardService::findComponentPermissions()->toArray(),
@@ -73,7 +73,7 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
                         ->find($arguments['id'])
                         ?->roles
                         ->pluck('id')
-                        ->toArray()
+                        ->toArray(),
                 ]
             )
             ->action(
@@ -104,12 +104,13 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
         return Role::whereHas('permissions', function ($q) use ($permissionId) {
             $q->where('id', $permissionId);
         })
-        ->with('permissions')
-        ->get()
-        ->toArray();
+            ->with('permissions')
+            ->get()
+            ->toArray();
     }
 
-    public function form(Schema $schema): Schema {
+    public function form(Schema $schema): Schema
+    {
         return $schema
             ->statePath('filters')
             ->schema([
@@ -120,7 +121,7 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
                                 'tables' => 'Modely',
                                 'pages' => 'Stránky',
                                 'components' => 'Komponenty',
-                                'other' => 'Iné práva'
+                                'other' => 'Iné práva',
                             ])
                             ->label(__('dpb-mpg::translations.filament_page.form.fields.type'))
                             ->inlineLabel()
@@ -136,7 +137,7 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
                                 }
                             })
                             ->selectablePlaceholder(false),
-                    ])
+                    ]),
             ]);
     }
 
@@ -159,6 +160,7 @@ class PermissionManagerPage extends Page implements HasForms, HasActions
     {
         /** @var User|null $user */
         $user = Auth::user();
+
         return $user?->hasRole('super-admin') ?? false;
     }
 }

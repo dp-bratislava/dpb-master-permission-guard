@@ -2,23 +2,26 @@
 
 namespace Dpb\MasterPermissionGuard\Console;
 
-use Illuminate\Console\Command;
-use Illuminate\Database\Eloquent\Model;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use RegexIterator;
-use ReflectionClass;
 use Dpb\MasterPermissionGuard\Concerns\HasTableGuard;
 use Dpb\MasterPermissionGuard\Support\Registry;
+use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use ReflectionClass;
+use RegexIterator;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 
 final class DiscoverProtectedModels extends Command
 {
     private const TRAIT = HasTableGuard::class;
+
     private const CACHE_KEY = 'mpg:tables';
+
     private const DEFAULT_GUARDS = ['web'];
+
     private const DEFAULT_PERMISSIONS = ['create', 'read', 'update', 'delete'];
 
     protected $signature = 'dpb:mpg:discover
@@ -35,7 +38,7 @@ final class DiscoverProtectedModels extends Command
         if ($this->option('dry')) {
             foreach ($hits as $tableName => $tableConfig) {
                 $this->line(sprintf(
-                    " - %s => %s [%s], guards: %s",
+                    ' - %s => %s [%s], guards: %s',
                     $tableConfig['class'],
                     $tableName,
                     implode(', ', $tableConfig['permissions']),
@@ -43,6 +46,7 @@ final class DiscoverProtectedModels extends Command
                 ));
             }
             $this->warn('DRY-RUN: Did not write anything to cache or create permissions.');
+
             return self::SUCCESS;
         }
 
@@ -80,17 +84,17 @@ final class DiscoverProtectedModels extends Command
     private function collectProtectedModels(): array
     {
         $roots = $this->resolveRoots();
-        $hits  = [];
+        $hits = [];
 
         foreach ($roots as $root) {
             $modelsDir = rtrim($root, '/');
-            if (!is_dir($modelsDir)) {
+            if (! is_dir($modelsDir)) {
                 continue;
             }
 
             // only classes in ./src/Models/
             $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($modelsDir));
-            $it  = new RegexIterator($rii, '/'.preg_quote(DIRECTORY_SEPARATOR, '/').'Models'.preg_quote(DIRECTORY_SEPARATOR, '/').'.*\.php$/i');
+            $it = new RegexIterator($rii, '/'.preg_quote(DIRECTORY_SEPARATOR, '/').'Models'.preg_quote(DIRECTORY_SEPARATOR, '/').'.*\.php$/i');
 
             foreach ($it as $file) {
                 $path = $file->getPathname();
@@ -100,11 +104,11 @@ final class DiscoverProtectedModels extends Command
 
                 $fqcn = $this->fqcnFromFile($path);
 
-                if (!$fqcn || !class_exists($fqcn)) {
+                if (! $fqcn || ! class_exists($fqcn)) {
                     continue;
                 }
 
-                if (!is_subclass_of($fqcn, Model::class)) {
+                if (! is_subclass_of($fqcn, Model::class)) {
                     continue;
                 }
 
@@ -116,12 +120,12 @@ final class DiscoverProtectedModels extends Command
 
                 // really uses trait?
                 $uses = class_uses_recursive($fqcn);
-                if (!in_array(self::TRAIT, $uses, true)) {
+                if (! in_array(self::TRAIT, $uses, true)) {
                     continue;
                 }
 
                 // get table name
-                /** @var \Illuminate\Database\Eloquent\Model $m */
+                /** @var Model $m */
                 $m = $fqcn::query()->getModel();
                 $hits[$m->getTable()] = [
                     'class' => $fqcn,
@@ -130,10 +134,11 @@ final class DiscoverProtectedModels extends Command
                     'permissions' => array_merge(
                         self::DEFAULT_PERMISSIONS,
                         in_array(SoftDeletes::class, $uses, true) ? ['restore'] : []
-                    )
+                    ),
                 ];
             }
         }
+
         return $hits;
     }
 
@@ -180,13 +185,13 @@ final class DiscoverProtectedModels extends Command
             glob(base_path("$base/*"), GLOB_ONLYDIR) ?: []
         ) as $pkgDir) {
             $cmp = "$pkgDir/composer.json";
-            if (!is_file($cmp)) {
+            if (! is_file($cmp)) {
                 continue;
             }
 
-            $j = json_decode((string)file_get_contents($cmp), true);
+            $j = json_decode((string) file_get_contents($cmp), true);
             $req = array_keys(($j['require'] ?? []) + ($j['require-dev'] ?? []));
-            if (!in_array($our, $req, true)) {
+            if (! in_array($our, $req, true)) {
                 continue;
             }
 
@@ -194,11 +199,11 @@ final class DiscoverProtectedModels extends Command
             $paths = [];
 
             foreach ($psr4 as $ns => $dirs) {
-                foreach ((array)$dirs as $d) {
+                foreach ((array) $dirs as $d) {
                     $paths[] = rtrim("$pkgDir/$d", '/');
                 }
             }
-            if (!$paths && is_dir("$pkgDir/src")) {
+            if (! $paths && is_dir("$pkgDir/src")) {
                 $paths[] = "$pkgDir/src";
             }
 
@@ -208,16 +213,16 @@ final class DiscoverProtectedModels extends Command
                 }
             }
         }
+
         return array_values(array_unique($roots));
     }
-
 
     /** @return array<int,string> roots pod vendor/…/src */
     private function vendorPackageRootsRequiringMPG(
         array $only = []
     ): array {
         $installedPath = base_path('vendor/composer/installed.php');
-        if (!is_file($installedPath)) {
+        if (! is_file($installedPath)) {
             return [];
         }
 
@@ -227,24 +232,25 @@ final class DiscoverProtectedModels extends Command
         $ourPkg = 'dpb/dpb-model-permission-guard';
 
         foreach ($versions as $name => $info) {
-            if (!is_array($info)) {
+            if (! is_array($info)) {
                 continue;
             }
-            if ($only && !in_array($name, $only, true)) {
+            if ($only && ! in_array($name, $only, true)) {
                 continue;
             }
 
             $requires = ($info['require'] ?? []) + ($info['require-dev'] ?? []);
             $needs = $only ? true : isset($requires[$ourPkg]);
-            if (!$needs) {
+            if (! $needs) {
                 continue;
             }
 
-            $root = rtrim((string)($info['install_path'] ?? ''), '/');
+            $root = rtrim((string) ($info['install_path'] ?? ''), '/');
             if ($root && is_dir($root.'/src')) {
                 $roots[] = $root.'/src';
             }
         }
+
         return $roots;
     }
 
@@ -282,9 +288,10 @@ final class DiscoverProtectedModels extends Command
             }
         }
 
-        if (!$class) {
+        if (! $class) {
             return null;
         }
+
         return ltrim($ns.'\\'.$class, '\\');
     }
 }

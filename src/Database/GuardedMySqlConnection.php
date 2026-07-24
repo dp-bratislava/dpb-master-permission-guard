@@ -24,6 +24,7 @@ final class GuardedMySqlConnection extends MySqlConnection
         $useReadPdo = true
     ) {
         $this->guardSql($query, $bindings);
+
         return parent::select($query, $bindings, $useReadPdo);
     }
 
@@ -33,36 +34,42 @@ final class GuardedMySqlConnection extends MySqlConnection
         $sequence = null
     ): bool {
         $this->guardSql($query, $bindings);
+
         return parent::insert($query, $bindings);
     }
 
     public function update($query, $bindings = [])
     {
         $this->guardSql($query, $bindings);
+
         return parent::update($query, $bindings);
     }
 
     public function delete($query, $bindings = [])
     {
         $this->guardSql($query, $bindings);
+
         return parent::delete($query, $bindings);
     }
 
     public function affectingStatement($query, $bindings = [])
     {
         $this->guardSql($query, $bindings);
+
         return parent::affectingStatement($query, $bindings);
     }
 
     public function statement($query, $bindings = [])
     {
         $this->guardSql($query, $bindings);
+
         return parent::statement($query, $bindings);
     }
 
     public function unprepared($query)
     {
         $this->guardSql($query);
+
         return parent::select($query);
     }
 
@@ -75,7 +82,7 @@ final class GuardedMySqlConnection extends MySqlConnection
             return;
         }
 
-        if (!Str::contains($sql, array_keys(PermissionGuardService::getGuardedTables()))) {
+        if (! Str::contains($sql, array_keys(PermissionGuardService::getGuardedTables()))) {
             return;
         }
 

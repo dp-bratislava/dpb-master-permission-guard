@@ -17,13 +17,11 @@ class DpbMpgPlugin implements Plugin
         Panel $panel
     ): void {
         $panel->pages([
-            PermissionManagerPage::class
+            PermissionManagerPage::class,
         ]);
     }
 
     public function boot(
         Panel $panel
-    ): void {
-
-    }
+    ): void {}
 }

@@ -11,11 +11,11 @@ return [
                 'type' => 'Typ',
                 'guards' => 'Guard',
                 'table' => 'Tabuľka',
-                'package' => 'Balíček'
+                'package' => 'Balíček',
             ],
             'labels' => [
-                'all' => 'Všetky'
-            ]
+                'all' => 'Všetky',
+            ],
         ],
         'table' => [
             'headers' => [
@@ -23,7 +23,7 @@ return [
                 'table' => 'Tabuľka',
                 'action' => 'Akcia',
                 'permission' => 'Povolenie',
-                'roles' => 'Roly'
+                'roles' => 'Roly',
             ],
         ],
         'actions' => [
@@ -33,9 +33,9 @@ return [
                 'roles_form_field' => 'Roly',
                 'notifications' => [
                     'success' => 'Roly boli úspešne priradené k povoleniu.',
-                ]
-            ]
-        ]
+                ],
+            ],
+        ],
     ],
     'permission_actions' => [
         'create' => 'Vytvoriť',
@@ -43,5 +43,5 @@ return [
         'update' => 'Aktualizovať',
         'delete' => 'Odstrániť',
         'restore' => 'Obnoviť',
-    ]
+    ],
 ];

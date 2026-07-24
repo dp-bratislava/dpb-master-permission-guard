@@ -2,11 +2,8 @@
 
 namespace Dpb\MasterPermissionGuard\Database;
 
-use App\Models\User;
-use Dpb\MasterPermissionGuard\Exceptions\MissingPermissionException;
 use Dpb\MasterPermissionGuard\Services\PermissionGuardService;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\Auth;
 
 final class GuardedQueryBuilder extends Builder
 {
@@ -14,6 +11,7 @@ final class GuardedQueryBuilder extends Builder
         $columns = ['*']
     ) {
         PermissionGuardService::authorize($this->from, 'read');
+
         return parent::get($columns);
     }
 
@@ -21,6 +19,7 @@ final class GuardedQueryBuilder extends Builder
         $columns = ['*']
     ) {
         PermissionGuardService::authorize($this->from, 'read');
+
         return parent::first($columns);
     }
 
@@ -28,12 +27,14 @@ final class GuardedQueryBuilder extends Builder
         $columns = '*'
     ) {
         PermissionGuardService::authorize($this->from, 'read');
+
         return parent::count($columns);
     }
 
     public function exists()
     {
         PermissionGuardService::authorize($this->from, 'read');
+
         return parent::exists();
     }
 
@@ -41,6 +42,7 @@ final class GuardedQueryBuilder extends Builder
         array $values
     ) {
         PermissionGuardService::authorize($this->from, 'create');
+
         return parent::insert($values);
     }
 
@@ -50,6 +52,7 @@ final class GuardedQueryBuilder extends Builder
         ?array $update = null
     ): int {
         PermissionGuardService::authorizeOneOf($this->from, ['update', 'create']);
+
         return parent::upsert($values, $uniqueBy, $update);
     }
 
@@ -57,6 +60,7 @@ final class GuardedQueryBuilder extends Builder
         array $values
     ) {
         PermissionGuardService::authorize($this->from, 'update');
+
         return parent::update($values);
     }
 
@@ -64,12 +68,14 @@ final class GuardedQueryBuilder extends Builder
         $id = null
     ) {
         PermissionGuardService::authorize($this->from, 'delete');
+
         return parent::delete($id);
     }
 
     public function truncate()
     {
         PermissionGuardService::authorize($this->from, 'delete');
+
         return parent::truncate();
     }
 }

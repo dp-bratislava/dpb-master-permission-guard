@@ -3,27 +3,27 @@
 namespace Dpb\MasterPermissionGuard\Concerns;
 
 use Dpb\MasterPermissionGuard\Services\PermissionGuardService;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Trait for models that require permission guarding.
- * @mixin \Illuminate\Database\Eloquent\Model
+ *
+ * @mixin Model
  */
 trait HasTableGuard
 {
-    protected static function bootHasTableGuard(): void
-    {
-    }
+    protected static function bootHasTableGuard(): void {}
 
     public static function getTablePermissions(
         bool $readOnly = false,
         bool $withRestore = false
     ): array {
         $tablePermissions = [];
-        $tableName = (new static())->getTable();
+        $tableName = (new static)->getTable();
         $prefix = 'dpb-mpg';
         if ($readOnly) {
             return [
-                "{$prefix}.{$tableName}.read"
+                "{$prefix}.{$tableName}.read",
             ];
         }
         $tablePermissions[] = "{$prefix}.{$tableName}.create";
@@ -33,6 +33,7 @@ trait HasTableGuard
         if ($withRestore) {
             $tablePermissions[] = "{$prefix}.{$tableName}.restore";
         }
+
         return $tablePermissions;
     }
 
@@ -60,7 +61,7 @@ trait HasTableGuard
         string $ability
     ): bool {
         return PermissionGuardService::can(
-            table: (new static())->getTable(),
+            table: (new static)->getTable(),
             operation: $ability
         );
     }

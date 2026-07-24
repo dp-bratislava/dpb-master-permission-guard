@@ -15,7 +15,7 @@ class MissingPermissionException extends \RuntimeException
         parent::__construct(
             __('dpb-mpg::exceptions.not_allowed', [
                 'operation' => $operation,
-                'table' => $table
+                'table' => $table,
             ])
         );
     }
@@ -30,12 +30,13 @@ class MissingPermissionException extends \RuntimeException
         $payload = [
             'error' => 'forbidden',
             'op' => $this->operation,
-            'table' => $this->table
+            'table' => $this->table,
         ];
         if ($request->expectsJson()) {
             return response()->json($payload, 403);
         }
-        return response($this->getMessage() . '<br>todo: treba lepší error handling!', 403);
-        //return redirect()->back();
+
+        return response($this->getMessage().'<br>todo: treba lepší error handling!', 403);
+        // return redirect()->back();
     }
 }

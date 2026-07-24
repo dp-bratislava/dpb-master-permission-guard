@@ -28,11 +28,11 @@ class PermissionGuardService
         string $table,
         string $operation
     ): void {
-        if (!Registry::isProtected($table)) {
+        if (! Registry::isProtected($table)) {
             return;
         }
 
-        if (!self::getAuthUser()?->can(self::buildPermissionKey($table, $operation))) {
+        if (! self::getAuthUser()?->can(self::buildPermissionKey($table, $operation))) {
             throw new MissingPermissionException(
                 operation: $operation,
                 table: $table
@@ -44,11 +44,11 @@ class PermissionGuardService
         string $table,
         array $operations
     ): void {
-        if (!Registry::isProtected($table)) {
+        if (! Registry::isProtected($table)) {
             return;
         }
 
-        if (!self::getAuthUser()?->canAny(array_map(fn ($op) => self::buildPermissionKey($table, $op), $operations))) {
+        if (! self::getAuthUser()?->canAny(array_map(fn ($op) => self::buildPermissionKey($table, $op), $operations))) {
             throw new MissingPermissionException(
                 operation: implode(', ', $operations),
                 table: $table
@@ -144,7 +144,7 @@ class PermissionGuardService
         bool $withRoles = false
     ): array {
         $name = sprintf('%s.%s', $package ?: '%', $table ?: '%');
-        if (!str_ends_with($name, '%')) {
+        if (! str_ends_with($name, '%')) {
             $name .= '.%';
         }
         $tableQuery = DB::table('permissions AS p');
@@ -171,12 +171,14 @@ class PermissionGuardService
                     END AS roles"
                 : 'p.id, p.name, p.guard_ name'
             );
+
         return $tableQuery
             ->get()
             ->map(function ($row) use ($withRoles) {
                 if ($withRoles) {
                     $row->roles = json_decode($row->roles, true);
                 }
+
                 return (array) $row;
             })
             ->toArray();

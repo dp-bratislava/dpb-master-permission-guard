@@ -28,11 +28,12 @@ class SqlInspector
 
         if (preg_match('/\A\s*TRUNCATE\s+(?:TABLE\s+)?(?:`?([a-z0-9_]+)`?\.)?`?([a-z0-9_]+)`?/i', $sql, $m)) {
             $table = ($m[1] ?? null) ? "{$m[1]}.{$m[2]}" : $m[2];
+
             return [$table => 'delete'];
         }
 
-        return (new Collection(DB::select('EXPLAIN ' . $sql, $bindings)))
-            ->mapWithKeys(fn ($item) => [$item->table => match($item->select_type) {
+        return (new Collection(DB::select('EXPLAIN '.$sql, $bindings)))
+            ->mapWithKeys(fn ($item) => [$item->table => match ($item->select_type) {
                 'SIMPLE' => 'read',
                 'PRIMARY' => 'read',
                 'DERIVED' => 'read',
@@ -40,7 +41,7 @@ class SqlInspector
                 'REPLACE' => 'create',
                 'UPDATE' => 'update',
                 'DELETE' => 'delete',
-                default => dd('unknown select type: '. $item->select_type)
+                default => dd('unknown select type: '.$item->select_type)
             }])
             ->toArray();
     }

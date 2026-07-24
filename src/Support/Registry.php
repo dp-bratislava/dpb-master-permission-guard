@@ -27,6 +27,7 @@ final class Registry
         string $prefix = ''
     ): bool {
         $t = self::normalize($table, $prefix);
+
         return isset(self::$tables[$t]);
     }
 
@@ -35,6 +36,7 @@ final class Registry
         string $prefix = ''
     ): ?string {
         $t = self::normalize($table, $prefix);
+
         return self::$tables[$t] ?? null;
     }
 
@@ -48,6 +50,7 @@ final class Registry
         if ($prefix && str_starts_with($t, $prefix)) {
             $t = substr($t, strlen($prefix));
         }
+
         return $t;
     }
 }

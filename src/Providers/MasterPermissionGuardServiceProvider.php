@@ -24,12 +24,12 @@ class MasterPermissionGuardServiceProvider extends ServiceProvider
         ], 'dpb-mpg-config');
 
         $router->prependMiddlewareToGroup('web', EnableMasterPermissionGuard::class);
-        if (!$this->app->runningInConsole()) {
+        if (! $this->app->runningInConsole()) {
             $this->initializeCache();
         }
-        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
-        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'dpb-mpg');
-        $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'dpb-mpg');
+        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
+        $this->loadTranslationsFrom(__DIR__.'/../../resources/lang', 'dpb-mpg');
+        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'dpb-mpg');
         $this->registerConsoleCommands();
         $this->registerFilamentPlugin();
     }
